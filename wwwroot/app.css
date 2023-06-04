@@ -109,3 +109,6 @@ a, .btn-link {
     content: var(--blazor-load-percentage-text, "Loading");
 }
     
+.main-container {
+    margin-top: 2rem;
+}

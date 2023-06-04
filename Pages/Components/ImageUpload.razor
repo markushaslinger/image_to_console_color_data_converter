@@ -10,11 +10,13 @@
 </MudFileUpload>
 
 @code {
-
+        
         private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+    private const int MaxFileSize = 1024 * 1024 * 25; // 25MB
+    
     private string _dragClass = DefaultDragClass;
     private static readonly string[] allowedExtensions = { ".jpg", ".png" };
-    private const int MaxFileSize = 1024 * 1024 * 25; // 25MB
+        
 
     [Parameter]
     public EventCallback<Image<Rgba32>> ImageUploaded { get; set; }

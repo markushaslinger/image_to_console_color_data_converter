@@ -7,13 +7,17 @@
     <MudStack Row="false">
         <ImageUpload ImageUploaded="HandleImageUploaded"/>
         <MudSpacer/>
-        @if (_resultText is not null)
+        @if (_csvRows is not null)
         {
             <MudStack>
                 <MudText>16 Colors Array</MudText>
-                <MudSlider Value="_width" Min="4" Max="80" Step="2" 
+                <MudSlider Value="_width" Min="4" Max="82" Step="2" 
                            ValueChanged="(int newWidth) => HandleWidthChanged(newWidth)">@_width Columns</MudSlider>
-                <MudText>@_resultText</MudText>
+                <MudSpacer />
+                @foreach(var row in _csvRows)
+                {
+                    <MudText>@row</MudText>
+                }
             </MudStack>
         }
     </MudStack>
@@ -21,6 +25,6 @@
 
 @code {
 
-    private string? _resultText;
+    private IEnumerable<string>? _csvRows;
 
 }

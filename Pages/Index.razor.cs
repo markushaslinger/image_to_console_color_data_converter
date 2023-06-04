@@ -1,13 +1,34 @@
-﻿using System.Text;
+﻿using System.Collections.Frozen;
+using System.Text;
 using ColorMine.ColorSpaces;
 
 namespace ImageForConsoleConverter.Pages;
 
 public partial class Index
 {
+    private static readonly FrozenDictionary<ConsoleColor, Rgb> consoleColorToRgb = new Dictionary<ConsoleColor, Rgb>
+    {
+        { ConsoleColor.Black, new Rgb { R = 0, G = 0, B = 0 } },
+        { ConsoleColor.DarkBlue, new Rgb { R = 0, G = 0, B = 128 } },
+        { ConsoleColor.DarkGreen, new Rgb { R = 0, G = 128, B = 0 } },
+        { ConsoleColor.DarkCyan, new Rgb { R = 0, G = 128, B = 128 } },
+        { ConsoleColor.DarkRed, new Rgb { R = 128, G = 0, B = 0 } },
+        { ConsoleColor.DarkMagenta, new Rgb { R = 128, G = 0, B = 128 } },
+        { ConsoleColor.DarkYellow, new Rgb { R = 128, G = 128, B = 0 } },
+        { ConsoleColor.Gray, new Rgb { R = 128, G = 128, B = 128 } },
+        { ConsoleColor.DarkGray, new Rgb { R = 192, G = 192, B = 192 } },
+        { ConsoleColor.Blue, new Rgb { R = 0, G = 0, B = 255 } },
+        { ConsoleColor.Green, new Rgb { R = 0, G = 255, B = 0 } },
+        { ConsoleColor.Cyan, new Rgb { R = 0, G = 255, B = 255 } },
+        { ConsoleColor.Red, new Rgb { R = 255, G = 0, B = 0 } },
+        { ConsoleColor.Magenta, new Rgb { R = 255, G = 0, B = 255 } },
+        { ConsoleColor.Yellow, new Rgb { R = 255, G = 255, B = 0 } },
+        { ConsoleColor.White, new Rgb { R = 255, G = 255, B = 255 } }
+    }.ToFrozenDictionary();
+
     private Image<Rgba32>? _rawImage;
     private int _width = 40;
-    
+
     private static int[,] ConvertImage(Image<Rgba32> image, int desiredWidth)
     {
         try
@@ -41,11 +62,12 @@ public partial class Index
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return new int[0,0];
+
+            return new int[0, 0];
         }
     }
 
-    private static double ColorDistance(Rgb color1, Rgb color2)
+    private static double ColorDistance(IRgb color1, IRgb color2)
     {
         var redDifference = color1.R - color2.R;
         var greenDifference = color1.G - color2.G;
@@ -55,29 +77,10 @@ public partial class Index
                          blueDifference * blueDifference);
     }
 
-    private static Rgb ConsoleColorToRgb(ConsoleColor color)
-    {
-        return color switch
-               {
-                   ConsoleColor.Black       => new Rgb { R = 0, G = 0, B = 0 },
-                   ConsoleColor.DarkBlue    => new Rgb { R = 0, G = 0, B = 128 },
-                   ConsoleColor.DarkGreen   => new Rgb { R = 0, G = 128, B = 0 },
-                   ConsoleColor.DarkCyan    => new Rgb { R = 0, G = 128, B = 128 },
-                   ConsoleColor.DarkRed     => new Rgb { R = 128, G = 0, B = 0 },
-                   ConsoleColor.DarkMagenta => new Rgb { R = 128, G = 0, B = 128 },
-                   ConsoleColor.DarkYellow  => new Rgb { R = 128, G = 128, B = 0 },
-                   ConsoleColor.Gray        => new Rgb { R = 128, G = 128, B = 128 },
-                   ConsoleColor.DarkGray    => new Rgb { R = 192, G = 192, B = 192 },
-                   ConsoleColor.Blue        => new Rgb { R = 0, G = 0, B = 255 },
-                   ConsoleColor.Green       => new Rgb { R = 0, G = 255, B = 0 },
-                   ConsoleColor.Cyan        => new Rgb { R = 0, G = 255, B = 255 },
-                   ConsoleColor.Red         => new Rgb { R = 255, G = 0, B = 0 },
-                   ConsoleColor.Magenta     => new Rgb { R = 255, G = 0, B = 255 },
-                   ConsoleColor.Yellow      => new Rgb { R = 255, G = 255, B = 0 },
-                   ConsoleColor.White       => new Rgb { R = 255, G = 255, B = 255 },
-                   _                        => new Rgb { R = 0, G = 0, B = 0 }
-               };
-    }
+    private static Rgb ConsoleColorToRgb(ConsoleColor color) =>
+        consoleColorToRgb.TryGetValue(color, out var rgb)
+            ? rgb
+            : new Rgb { R = 0, G = 0, B = 0 }; // Default color if not found
 
     private void HandleImageUploaded(Image<Rgba32> uploadedImage)
     {
@@ -85,7 +88,7 @@ public partial class Index
         _rawImage = uploadedImage;
         OutputImageCsv();
     }
-    
+
     private void OutputImageCsv()
     {
         if (_rawImage is null)
@@ -94,19 +97,19 @@ public partial class Index
         }
 
         var converted = ConvertImage(_rawImage, _width);
-        var csv = ConvertArrayToCsv(converted);
-        _resultText = csv;
+        _csvRows = ConvertArrayToCsv(converted);
         StateHasChanged();
     }
 
-    private static string ConvertArrayToCsv(int[,] array)
+    private static IEnumerable<string> ConvertArrayToCsv(int[,] array)
     {
-        var csv = new StringBuilder();
         var width = array.GetLength(0);
         var height = array.GetLength(1);
+        var rows = new string[height];
 
         for (var i = 0; i < height; i++)
         {
+            var csv = new StringBuilder();
             for (var j = 0; j < width; j++)
             {
                 csv.Append($"{array[j, i]:00}");
@@ -116,10 +119,10 @@ public partial class Index
                 }
             }
 
-            csv.AppendLine();
+            rows[i] = csv.ToString();
         }
 
-        return csv.ToString();
+        return rows;
     }
 
     private void HandleWidthChanged(int newWidth)
