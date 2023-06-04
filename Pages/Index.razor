@@ -1,0 +1,26 @@
+﻿@page "/"
+@using ImageForConsoleConverter.Pages.Components
+
+<PageTitle>Index</PageTitle>
+
+<MudPaper>
+    <MudStack Row="false">
+        <ImageUpload ImageUploaded="HandleImageUploaded"/>
+        <MudSpacer/>
+        @if (_resultText is not null)
+        {
+            <MudStack>
+                <MudText>16 Colors Array</MudText>
+                <MudSlider Value="_width" Min="4" Max="80" Step="2" 
+                           ValueChanged="(int newWidth) => HandleWidthChanged(newWidth)">@_width Columns</MudSlider>
+                <MudText>@_resultText</MudText>
+            </MudStack>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+
+    private string? _resultText;
+
+}
